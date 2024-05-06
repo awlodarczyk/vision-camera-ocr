@@ -41,7 +41,7 @@ export type OCRFrame = {
   result: Text;
 };
 
-const plugin = VisionCameraProxy.initFrameProcessorPlugin('scanOCR');
+const plugin = VisionCameraProxy.initFrameProcessorPlugin('scanOCR', {});
 
 /**
  * Scans OCR.
