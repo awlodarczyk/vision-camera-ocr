@@ -3,15 +3,18 @@ import AVFoundation
 import MLKitVision
 import MLKitTextRecognition
 
-@objc(OCRFrameProcessorPlugin)
-public class OCRFrameProcessorPlugin: NSObject, FrameProcessorPluginBase {
-    
+@objc(VisionCameraOcr)
+public class VisionCameraOcr: FrameProcessorPlugin {
+    public override init(proxy: VisionCameraProxyHolder, options: [AnyHashable : Any]! = [:]) {
+      super.init(proxy: proxy, options: options)
+    }
+
     private static var textRecognizer = TextRecognizer.textRecognizer()
-    
+
     private static func getBlockArray(_ blocks: [TextBlock]) -> [[String: Any]] {
-        
+
         var blockArray: [[String: Any]] = []
-        
+
         for block in blocks {
             blockArray.append([
                 "text": block.text,
@@ -21,14 +24,14 @@ public class OCRFrameProcessorPlugin: NSObject, FrameProcessorPluginBase {
                 "lines": getLineArray(block.lines),
             ])
         }
-        
+
         return blockArray
     }
-    
+
     private static func getLineArray(_ lines: [TextLine]) -> [[String: Any]] {
-        
+
         var lineArray: [[String: Any]] = []
-        
+
         for line in lines {
             lineArray.append([
                 "text": line.text,
@@ -38,14 +41,14 @@ public class OCRFrameProcessorPlugin: NSObject, FrameProcessorPluginBase {
                 "elements": getElementArray(line.elements),
             ])
         }
-        
+
         return lineArray
     }
-    
+
     private static func getElementArray(_ elements: [TextElement]) -> [[String: Any]] {
-        
+
         var elementArray: [[String: Any]] = []
-        
+
         for element in elements {
             elementArray.append([
                 "text": element.text,
@@ -53,14 +56,14 @@ public class OCRFrameProcessorPlugin: NSObject, FrameProcessorPluginBase {
                 "frame": getFrame(element.frame),
             ])
         }
-        
+
         return elementArray
     }
-    
+
     private static func getRecognizedLanguages(_ languages: [TextRecognizedLanguage]) -> [String] {
-        
+
         var languageArray: [String] = []
-        
+
         for language in languages {
             guard let code = language.languageCode else {
                 print("No language code exists")
@@ -68,14 +71,14 @@ public class OCRFrameProcessorPlugin: NSObject, FrameProcessorPluginBase {
             }
             languageArray.append(code)
         }
-        
+
         return languageArray
     }
-    
+
     private static func getCornerPoints(_ cornerPoints: [NSValue]) -> [[String: CGFloat]] {
-        
+
         var cornerPointArray: [[String: CGFloat]] = []
-        
+
         for cornerPoint in cornerPoints {
             guard let point = cornerPoint as? CGPoint else {
                 print("Failed to convert corner point to CGPoint")
@@ -83,12 +86,12 @@ public class OCRFrameProcessorPlugin: NSObject, FrameProcessorPluginBase {
             }
             cornerPointArray.append([ "x": point.x, "y": point.y])
         }
-        
+
         return cornerPointArray
     }
-    
+
     private static func getFrame(_ frameRect: CGRect) -> [String: CGFloat] {
-        
+
         let offsetX = (frameRect.midX - ceil(frameRect.width)) / 2.0
         let offsetY = (frameRect.midY - ceil(frameRect.height)) / 2.0
 
@@ -104,20 +107,20 @@ public class OCRFrameProcessorPlugin: NSObject, FrameProcessorPluginBase {
           "boundingCenterY": frameRect.midY
         ]
     }
-    
+
     @objc
     public static func callback(_ frame: Frame!, withArgs _: [Any]!) -> Any! {
-        
+
         guard (CMSampleBufferGetImageBuffer(frame.buffer) != nil) else {
           print("Failed to get image buffer from sample buffer.")
           return nil
         }
 
         let visionImage = VisionImage(buffer: frame.buffer)
-        
+
         // TODO: Get camera orientation state
         visionImage.orientation = .up
-        
+
         var result: Text
         do {
           result = try TextRecognizer.textRecognizer()
@@ -126,7 +129,7 @@ public class OCRFrameProcessorPlugin: NSObject, FrameProcessorPluginBase {
           print("Failed to recognize text with error: \(error.localizedDescription).")
           return nil
         }
-        
+
         return [
             "result": [
                 "text": result.text,
