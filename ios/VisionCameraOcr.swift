@@ -12,7 +12,7 @@ import VisionCamera
 @objc(OCRFrameProcessorPlugin)
 public class OCRFrameProcessorPlugin: FrameProcessorPlugin {
 
-    private static let textRecognizer = TextRecognizer.textRecognizer(options: TextRecognizerOptions.init())
+    private static let textRecognizer = TextRecognizer.textRecognizer()
 
     private static func getBlockArray(_ blocks: [TextBlock]) -> [[String: Any]] {
 
